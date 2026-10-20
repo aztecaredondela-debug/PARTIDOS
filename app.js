@@ -5,8 +5,9 @@ const PROXY = "https://sar-partidos.aztecaredondela.workers.dev";
 const URL_API = "https://resultadosbalonmano.isquad.es/json/partidos_equipos_consultas.php";
 const ID_CLUB_SAR = "273", ID_AMBITO = "20";
 const DIAS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-const COLS = ["Fecha", "Día", "Hora", "Categoría", "Competición", "Equipo SAR", "Rival", "Casa/Fuera", "Pabellón", "Estado"];
-const ANCHOS = [12, 11, 13, 26, 34, 20, 44, 14, 48, 32];
+// Mismo formato que el Excel de la federación
+const COLS = ["Equipo Local", "Equipo Visitante", "Pabellón", "Competición", "Categoría", "Fecha"];
+const ANCHOS = [52, 52, 52, 52, 36.4, 23.4];
 const CLAVE = "sar_datos_v1";
 
 const $ = id => document.getElementById(id);
@@ -120,7 +121,7 @@ function proximos(filas, dias = 7) {
 }
 
 // ===== datos con caché local (5 min; si falla la red, usa lo último guardado) =====
-let filas = [], aviso = "";
+let filas = [], crudas = [], aviso = "";
 const leer = () => { try { return JSON.parse(localStorage.getItem(CLAVE)); } catch { return null; } };
 async function datos(forzar) {
   const c = leer();
@@ -143,7 +144,8 @@ function celda(tr, txt, clase) { const td = document.createElement("td"); td.tex
 async function cargar(refrescar) {
   estado.className = ""; estado.textContent = "Cargando partidos…"; tabla.hidden = true;
   try {
-    filas = aFilas(await datos(refrescar));
+    crudas = await datos(refrescar);
+    filas = aFilas(crudas);
     const prox = proximos(filas);
     cuerpo.innerHTML = "";
     prox.forEach(p => {
@@ -170,43 +172,23 @@ function cargarExcelJS() {
     document.head.appendChild(s);
   });
 }
-function hoja(wb, titulo, datos, nota) {
-  const ws = wb.addWorksheet(titulo, { views: [{ state: "frozen", xSplit: 3, ySplit: 2, showGridLines: false }] });
-  const fnt = (o = {}) => ({ name: "Arial", size: 10, ...o });
-  const lado = { style: "thin", color: { argb: "FFBFBFBF" } }, borde = { top: lado, bottom: lado, left: lado, right: lado };
-  const rell = argb => ({ type: "pattern", pattern: "solid", fgColor: { argb } });
-  const n = ws.getCell(1, 1); n.value = nota; n.font = fnt({ italic: true, size: 9, color: { argb: "FF595959" } });
-  COLS.forEach((c, j) => {
-    const x = ws.getCell(2, j + 1); x.value = c; x.font = fnt({ bold: true, color: { argb: "FFFFFFFF" } });
-    x.fill = rell("FF1F3864"); x.border = borde; x.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
-  });
-  datos.forEach((f, i) => {
-    const [y, m, d] = (f.clave || "").split("-").map(Number), [hh, mm] = f.hora.split(":").map(Number);
-    const vals = [f.clave ? new Date(Date.UTC(y, m - 1, d)) : f.fecha, f.dia, isNaN(hh) ? f.hora : (hh * 60 + mm) / 1440,
-      f.cat, f.comp, f.mio, f.riv, f.cf, f.pab, f.estado];
-    vals.forEach((v, j) => {
-      const x = ws.getCell(i + 3, j + 1); x.value = v; x.font = fnt(); x.border = borde;
-      x.alignment = { vertical: "middle", wrapText: [4, 8, 9].includes(j), horizontal: [0, 1, 2, 7].includes(j) ? "center" : undefined };
-      if (j === 0 && typeof v !== "string") x.numFmt = "dd/mm/yyyy";
-      if (j === 2 && typeof v !== "string") x.numFmt = "hh:mm";
-    });
-    if (f.cf === "Casa") ws.getCell(i + 3, 8).fill = rell("FFE2EFDA");
-    if (f.estado !== "OK") ws.getCell(i + 3, 10).fill = rell("FFFFF2CC");
-  });
-  ANCHOS.forEach((w, j) => { ws.getColumn(j + 1).width = w; });
-  ws.autoFilter = `A2:J${2 + Math.max(datos.length, 1)}`;
+// "2026-10-24 09:45" -> "24/10/202609:45:00" (el mismo texto que usa la federación; sin fecha = vacío)
+function textoFecha(ts) {
+  if (!ts) return "";
+  const [f, h] = ts.split(" "), [y, m, d] = f.split("-");
+  return `${d}/${m}/${y}${h}:00`;
 }
 async function descargarExcel() {
   const b = $("descarga"), txt = b.textContent;
   b.textContent = "Generando…"; b.disabled = true;
   try {
-    if (!filas.length) await cargar(false);
+    if (!crudas.length) await cargar(false);
     await cargarExcelJS();
-    const hoy = new Date(), lim = new Date(); lim.setDate(lim.getDate() + 7);
-    const fm = d => `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}`;
     const wb = new ExcelJS.Workbook();
-    hoja(wb, "Partidos SAR", filas, `Partidos del SAR (club ${ID_CLUB_SAR}) · descarga del ${fm(hoy)} · verde = juega en casa · amarillo = dato por confirmar`);
-    hoja(wb, "Próximos 7 días", proximos(filas), `Partidos del ${fm(hoy)} al ${fm(lim)}`);
+    const ws = wb.addWorksheet("Sheet1");
+    ws.columns = COLS.map((c, j) => ({ header: c, width: ANCHOS[j] }));
+    ws.getRow(1).font = { bold: true };
+    crudas.forEach(r => ws.addRow([r.local, r.visitante, r.pab, r.comp, r.cat, textoFecha(r.ts)]));
     const buf = await wb.xlsx.writeBuffer();
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }));
