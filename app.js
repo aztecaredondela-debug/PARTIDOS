@@ -1,6 +1,6 @@
 // ===== CONFIGURACIÓN =====
 // URL de tu Cloudflare Worker (ver LEEME.txt). Vacío = intentar descargar directamente de la federación.
-const PROXY = "";
+const PROXY = "https://sar-partidos.aztecaredondela.workers.dev";
 
 const URL_API = "https://resultadosbalonmano.isquad.es/json/partidos_equipos_consultas.php";
 const ID_CLUB_SAR = "273", ID_AMBITO = "20";
