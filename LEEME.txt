@@ -1,0 +1,24 @@
+APP PARTIDOS SAR (PWA)
+
+ARCHIVOS: index.html, app.js, sw.js, manifest.json, icon-192.png, icon-512.png  -> la app
+          worker.js -> servicio intermedio (solo si hace falta, ver paso 2)
+
+1) SUBIR LA APP (gratis, con HTTPS, obligatorio para instalarla en el móvil)
+   Cloudflare Pages: dash.cloudflare.com > Workers & Pages > Create > Pages > Upload assets
+   Sube los 6 archivos de la app (sin worker.js). Te dará una dirección https://algo.pages.dev
+   (GitHub Pages también vale.)
+
+2) PROBAR SI HACE FALTA EL WORKER
+   Abre la dirección. Si salen los partidos, ya está: no necesitas nada más.
+   Si sale "sin conexión o la federación bloquea el acceso directo":
+   - Cloudflare > Workers & Pages > Create > Worker > pega el contenido de worker.js > Deploy
+   - Copia su dirección (https://algo.tuusuario.workers.dev)
+   - En app.js cambia la línea  const PROXY = "";  por  const PROXY = "esa dirección";
+   - Vuelve a subir app.js.
+
+3) INSTALAR EN EL MÓVIL
+   Android (Chrome): menú ⋮ > Instalar aplicación (o el botón "Instalar app" de la pantalla).
+   iPhone (Safari): botón Compartir > Añadir a pantalla de inicio.
+
+4) CAMBIOS FUTUROS
+   Si modificas archivos, cambia "sar-v1" por "sar-v2" en sw.js para que los móviles se actualicen.

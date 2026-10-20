@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1f3864">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Partidos SAR">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Partidos SAR</title>
+<style>
+:root{--fondo:#f4f6fb;--tarjeta:#fff;--texto:#1b2433;--suave:#5d6b82;--azul:#1f3864;--verde:#e2efda;--ambar:#fff2cc;--borde:#d9dfeb}
+@media (prefers-color-scheme:dark){:root{--fondo:#12161f;--tarjeta:#1b2130;--texto:#e8ecf5;--suave:#9aa7bd;--azul:#5b87d6;--verde:#24402a;--ambar:#4a3f1b;--borde:#2c3547}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--fondo);color:var(--texto);font-family:Arial,Helvetica,sans-serif;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom))}
+.caja{max-width:1100px;margin:0 auto}
+h1{margin:0 0 4px;font-size:26px}
+.sub{color:var(--suave);margin:0 0 20px}
+.botones{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+a.btn,button{font:inherit;font-weight:bold;padding:14px 22px;border-radius:10px;border:0;cursor:pointer;text-decoration:none;display:inline-block}
+.prim{background:var(--azul);color:#fff}
+.sec{background:var(--tarjeta);color:var(--texto);border:1px solid var(--borde)}
+.tarjeta{background:var(--tarjeta);border:1px solid var(--borde);border-radius:12px;padding:16px;overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{background:var(--azul);color:#fff;text-align:left;padding:8px 10px;white-space:nowrap}
+td{padding:8px 10px;border-bottom:1px solid var(--borde);vertical-align:top}
+.casa{background:var(--verde);font-weight:bold}
+.pend{background:var(--ambar)}
+#estado{color:var(--suave);margin:0 0 12px}
+.error{color:#c0392b;font-weight:bold}
+</style></head><body><div class="caja">
+<h1>Partidos del SAR</h1>
+<p class="sub">Datos de la Federación Galega de Balonmán</p>
+<div class="botones">
+  <button class="prim" id="descarga">⬇ Descargar Excel completo</button>
+  <a class="btn sec" href="https://resultadosbalonmano.isquad.es/partidos_equipos.php?seleccion=0&amp;id=1040701&amp;id_ambito=0&amp;id_territorial=20&amp;id_superficie=1&amp;iframe=0&amp;id_categoria=3117&amp;id_competicion=211923" target="_blank" rel="noopener">Abrir la web de la federación</a>
+  <button class="sec" id="actualizar">↻ Actualizar datos</button>
+  <button class="sec" id="instalar" hidden>Instalar app</button>
+</div>
+<div class="tarjeta">
+  <p id="estado">Cargando partidos…</p>
+  <table id="tabla" hidden><thead><tr>
+    <th>Fecha</th><th>Hora</th><th>Categoría</th><th>Equipo SAR</th><th>Rival</th><th>Casa/Fuera</th><th>Pabellón</th>
+  </tr></thead><tbody></tbody></table>
+</div></div>
+<script src="app.js"></script>
+</body></html>
